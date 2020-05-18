@@ -24,3 +24,20 @@ func TestWikiSave(t *testing.T) {
 		t.Errorf("test failed -- %q", err2)
 	}
 }
+
+func TestWikiLoadPage(t *testing.T) {
+	page := &Page{
+		Title: "LoadPage",
+		Body:  []byte("testing load page"),
+	}
+	page.save()
+	page2, err := loadPage(page.Title)
+	if err != nil {
+		t.Errorf("test failed -- %q", err)
+	}
+	expectedContent := string(page.Body)
+	loadPageContent := string(page2.Body)
+	if loadPageContent != expectedContent {
+		t.Errorf("test failed -- content does not match\n %q \n %q", expectedContent, loadPageContent)
+	}
+}
