@@ -8,24 +8,30 @@ import (
 	"testing"
 )
 
+func genericErrorHandler(t *testing.T, e error) {
+	if e != nil {
+		t.Errorf("test failed -- %q", e)
+	}
+}
+
+func contentErrorHandler(t *testing.T, s0 string, s1 string) {
+	if s0 != s1 {
+		t.Errorf("test failed -- content does not match\n %q \n %q", s0, s1)
+	}
+}
+
 func TestWikiSave(t *testing.T) {
 	page := &Page{
 		Title: "PageTitle",
 		Body:  []byte("this is the page body"),
 	}
 	err := page.save()
-	if err != nil {
-		t.Errorf("test failed -- %q", err)
-	}
+	genericErrorHandler(t, err)
 	content, err2 := ioutil.ReadFile(page.Title + ".txt")
-	if err2 != nil {
-		t.Errorf("test failed -- %q", err2)
-	}
+	genericErrorHandler(t, err2)
 	stringContent := string(content)
 	pageContent := string(page.Body)
-	if stringContent != pageContent {
-		t.Errorf("test failed -- %q", err2)
-	}
+	contentErrorHandler(t, stringContent, pageContent)
 }
 
 func TestWikiLoadPage(t *testing.T) {
@@ -35,14 +41,10 @@ func TestWikiLoadPage(t *testing.T) {
 	}
 	page.save()
 	page2, err := loadPage(page.Title)
-	if err != nil {
-		t.Errorf("test failed -- %q", err)
-	}
+	genericErrorHandler(t, err)
 	expectedContent := string(page.Body)
 	loadPageContent := string(page2.Body)
-	if loadPageContent != expectedContent {
-		t.Errorf("test failed -- content does not match\n %q \n %q", expectedContent, loadPageContent)
-	}
+	contentErrorHandler(t, expectedContent, loadPageContent)
 }
 
 func TestViewHandler(t *testing.T) {
@@ -52,20 +54,14 @@ func TestViewHandler(t *testing.T) {
 	}
 	page.save()
 	req, err := http.NewRequest("GET", "http://localhost/view/wiki", nil)
-	if err != nil {
-		t.Errorf("test failed -- %q", err)
-	}
+	genericErrorHandler(t, err)
 	w := httptest.NewRecorder()
 	viewHandler(w, req)
 	resp := w.Result()
 	body, err2 := ioutil.ReadAll(resp.Body)
-	if err2 != nil {
-		t.Errorf("test failed -- %q", err2)
-	}
-	expectedHtmlBody := fmt.Sprintf("<h1>%v</h1><div>%v</div>", page.Title, string(page.Body))
-	if string(body) != expectedHtmlBody {
-		t.Errorf("content does not match \n %v \n %v", string(body), expectedHtmlBody)
-	}
+	genericErrorHandler(t, err2)
+	expectedHtmlBody := fmt.Sprintf("<h1>%s</h1><div>%s</div>", page.Title, string(page.Body))
+	contentErrorHandler(t, string(body), expectedHtmlBody)
 	if resp.StatusCode != 200 {
 		t.Errorf("received %q status when I expected %q", resp.StatusCode, 200)
 	}
@@ -73,18 +69,30 @@ func TestViewHandler(t *testing.T) {
 
 func TestRootHandler(t *testing.T) {
 	req, err := http.NewRequest("GET", "http://localhost/", nil)
-	if err != nil {
-		t.Errorf("test failed -- %q", err)
-	}
+	genericErrorHandler(t, err)
 	w := httptest.NewRecorder()
 	rootHandler(w, req)
 	resp := w.Result()
 	body, reqErr := ioutil.ReadAll(resp.Body)
-	if reqErr != nil {
-		t.Errorf("test failed -- %q", err)
-	}
+	genericErrorHandler(t, reqErr)
 	expectedBody := "Nothing to see here!"
-	if string(body) != expectedBody {
-		t.Errorf("content does not match \n %v \n %v", string(body), expectedBody)
-	}
+	contentErrorHandler(t, expectedBody, string(body))
+}
+
+func TestEditHandler(t *testing.T) {
+	req, err := http.NewRequest("GET", "http://localhost/edit/newpage", nil)
+	genericErrorHandler(t, err)
+	w := httptest.NewRecorder()
+	editHandler(w, req)
+	resp := w.Result()
+	body, reqErr := ioutil.ReadAll(resp.Body)
+	genericErrorHandler(t, reqErr)
+	expectedBody :=
+		`<h1>Editing newpage</h1>
+
+<form action="/save/newpage" method="POST">
+    <div><textarea name="body" rows="20" cols="80"></textarea></div>
+    <div><input type="submit" value="Save"></div>
+</form>`
+	contentErrorHandler(t, string(body), expectedBody)
 }
