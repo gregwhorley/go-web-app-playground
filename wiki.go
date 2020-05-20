@@ -1,7 +1,7 @@
 package main
 
 import (
-	"fmt"
+	"html/template"
 	"io"
 	"io/ioutil"
 	"log"
@@ -29,20 +29,31 @@ func loadPage(title string) (*Page, error){
 
 func viewHandler(w http.ResponseWriter, r *http.Request) {
 	title := r.URL.Path[len("/view/"):]
-	p0, _ := loadPage(title)
-	fmt.Fprintf(w, "<h1>%s</h1><div>%s</div>", p0.Title, p0.Body)
+	p, _ := loadPage(title)
+	t, _ := template.ParseFiles("view.html")
+	t.Execute(w, p)
 }
 
 func rootHandler(w http.ResponseWriter, r *http.Request) {
 	io.WriteString(w, "Nothing to see here!")
 }
 
+func editHandler(w http.ResponseWriter, r *http.Request) {
+	title := r.URL.Path[len("/edit/"):]
+	p, err := loadPage(title)
+	if err != nil {
+		p = &Page{
+			Title: title,
+			Body:  nil,
+		}
+	}
+	t, _ := template.ParseFiles("edit.html")
+	_ = t.Execute(w, p)
+}
+
 func main() {
-	p1 := &Page{Title: "TestPage", Body: []byte("This is a sample page.")}
-	p1.save()
-	p2, _ := loadPage("TestPage")
-	fmt.Println(string(p2.Body))
 	http.HandleFunc("/view/", viewHandler)
 	http.HandleFunc("/", rootHandler)
+	http.HandleFunc("/edit/", editHandler)
 	log.Fatal(http.ListenAndServe(":8080", nil))
 }
