@@ -70,6 +70,19 @@ func TestViewHandler(t *testing.T) {
 	}
 }
 
+func TestViewHandlerRedirect(t *testing.T) {
+	req := httptest.NewRequest("GET", "http://localhost/view/unknown", nil)
+	w := httptest.NewRecorder()
+	viewHandler(w, req)
+	resp := w.Result()
+	if resp.StatusCode != http.StatusFound {
+		t.Errorf("received a %v when I expected a %v", resp.StatusCode, http.StatusFound)
+	}
+	if url, _ := resp.Location(); url.Path != "/edit/unknown" {
+		t.Errorf("unexpected path -- got %v when I wanted /edit/unknown", url.Path)
+	}
+}
+
 func TestRootHandler(t *testing.T) {
 	req, err := http.NewRequest("GET", "http://localhost/", nil)
 	genericErrorHandler(t, err)
