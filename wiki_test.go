@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
@@ -60,7 +59,11 @@ func TestViewHandler(t *testing.T) {
 	resp := w.Result()
 	body, err2 := ioutil.ReadAll(resp.Body)
 	genericErrorHandler(t, err2)
-	expectedHtmlBody := fmt.Sprintf("<h1>%s</h1><div>%s</div>", page.Title, string(page.Body))
+	expectedHtmlBody := `<h1>wiki</h1>
+
+<p>[<a href="/edit/wiki">edit</a>]</p>
+
+<div>wiki page!</div>`
 	contentErrorHandler(t, string(body), expectedHtmlBody)
 	if resp.StatusCode != 200 {
 		t.Errorf("received %q status when I expected %q", resp.StatusCode, 200)
