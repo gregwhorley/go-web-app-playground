@@ -4,6 +4,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
 )
 
@@ -76,7 +77,7 @@ func TestViewHandlerRedirect(t *testing.T) {
 	viewHandler(w, req)
 	resp := w.Result()
 	if resp.StatusCode != http.StatusFound {
-		t.Errorf("received a %v when I expected a %v", resp.StatusCode, http.StatusFound)
+		t.Errorf("received status code %v when I expected a %v", resp.StatusCode, http.StatusFound)
 	}
 	if url, _ := resp.Location(); url.Path != "/edit/unknown" {
 		t.Errorf("unexpected path -- got %v when I wanted /edit/unknown", url.Path)
@@ -111,4 +112,17 @@ func TestEditHandler(t *testing.T) {
     <div><input type="submit" value="Save"></div>
 </form>`
 	contentErrorHandler(t, string(body), expectedBody)
+}
+
+func TestSaveHandler(t *testing.T) {
+	req := httptest.NewRequest("GET", "http://localhost/save/saveme", strings.NewReader("save me!"))
+	w := httptest.NewRecorder()
+	saveHandler(w, req)
+	resp := w.Result()
+	if resp.StatusCode != http.StatusFound {
+		t.Errorf("received status code %v when I expected a %v", resp.StatusCode, http.StatusFound)
+	}
+	if url, _ := resp.Location(); url.Path != "/view/saveme" {
+		t.Errorf("unexpected path -- got %v when I wanted /view/saveme", url.Path)
+	}
 }
