@@ -8,6 +8,7 @@ import (
 	"net/http"
 )
 
+// Page : plaintext wiki page
 type Page struct {
 	Title string
 	Body  []byte
