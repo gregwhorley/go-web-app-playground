@@ -126,3 +126,32 @@ func TestSaveHandler(t *testing.T) {
 		t.Errorf("unexpected path -- got %v when I wanted /view/saveme", url.Path)
 	}
 }
+
+func TestPathTraversalInURLFails(t *testing.T) {
+	var (
+		editPath = "http://localhost/edit/../../../etc/passwd"
+		savePath = "http://localhost/save/newpage/../../../../bin/rootKit"
+		viewPath = "http://localhost/view/../../../etc/shadow"
+	)
+	req := httptest.NewRequest("GET", editPath, nil)
+	w := httptest.NewRecorder()
+	editHandler(w, req)
+	resp := w.Result()
+	if resp.StatusCode != http.StatusNotFound {
+		t.Errorf("did not get a 404 response, got %v instead", resp.StatusCode)
+	}
+	saveReq := httptest.NewRequest("GET", savePath, nil)
+	saveW := httptest.NewRecorder()
+	saveHandler(saveW, saveReq)
+	saveResp := saveW.Result()
+	if saveResp.StatusCode != http.StatusNotFound {
+		t.Errorf("did not get a 404 response, got %v instead", saveResp.StatusCode)
+	}
+	viewReq := httptest.NewRequest("GET", viewPath, nil)
+	viewW := httptest.NewRecorder()
+	viewHandler(viewW, viewReq)
+	viewResp := viewW.Result()
+	if viewResp.StatusCode != http.StatusNotFound {
+		t.Errorf("did not get a 404 response, got %v instead", viewResp.StatusCode)
+	}
+}
