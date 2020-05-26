@@ -14,6 +14,9 @@ type Page struct {
 	Body  []byte
 }
 
+// html template caching will immediately halt execution if files not found
+var templates = template.Must(template.ParseFiles("edit.html", "view.html"))
+
 func (p *Page) save() error {
 	filename := p.Title + ".txt"
 	return ioutil.WriteFile(filename, p.Body, 0600)
@@ -29,11 +32,7 @@ func loadPage(title string) (*Page, error) {
 }
 
 func renderTemplate(w http.ResponseWriter, tpl string, p *Page) {
-	t, err := template.ParseFiles(tpl + ".html")
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-	}
-	err = t.Execute(w, p)
+	err := templates.ExecuteTemplate(w, tpl+".html", p)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
