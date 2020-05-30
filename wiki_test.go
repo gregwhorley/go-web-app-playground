@@ -94,8 +94,12 @@ func TestRootHandler(t *testing.T) {
 	resp := w.Result()
 	body, reqErr := ioutil.ReadAll(resp.Body)
 	genericErrorHandler(t, reqErr)
-	expectedBody := "Nothing to see here!"
-	contentErrorHandler(t, expectedBody, string(body))
+	if resp.StatusCode != http.StatusFound {
+		t.Errorf("Expected status code %v but received %v", http.StatusFound, resp.StatusCode)
+	}
+	if !strings.Contains(string(body), "Found") {
+		t.Errorf("Expected response to contain Found but received %v", string(body))
+	}
 }
 
 func TestEditHandler(t *testing.T) {
