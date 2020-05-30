@@ -56,7 +56,8 @@ func TestViewHandler(t *testing.T) {
 	req, err := http.NewRequest("GET", "http://localhost/view/wiki", nil)
 	genericErrorHandler(t, err)
 	w := httptest.NewRecorder()
-	viewHandler(w, req, "/view/wiki")
+	viewHandle := makeHandler(viewHandler)
+	viewHandle(w, req)
 	resp := w.Result()
 	body, err2 := ioutil.ReadAll(resp.Body)
 	genericErrorHandler(t, err2)
@@ -74,7 +75,8 @@ func TestViewHandler(t *testing.T) {
 func TestViewHandlerRedirect(t *testing.T) {
 	req := httptest.NewRequest("GET", "http://localhost/view/unknown", nil)
 	w := httptest.NewRecorder()
-	viewHandler(w, req, "/view/unknown")
+	viewHandle := makeHandler(viewHandler)
+	viewHandle(w, req)
 	resp := w.Result()
 	if resp.StatusCode != http.StatusFound {
 		t.Errorf("received status code %v when I expected a %v", resp.StatusCode, http.StatusFound)
@@ -100,7 +102,8 @@ func TestEditHandler(t *testing.T) {
 	req, err := http.NewRequest("GET", "http://localhost/edit/newpage", nil)
 	genericErrorHandler(t, err)
 	w := httptest.NewRecorder()
-	editHandler(w, req, "/edit/newpage")
+	editHandle := makeHandler(editHandler)
+	editHandle(w, req)
 	resp := w.Result()
 	body, reqErr := ioutil.ReadAll(resp.Body)
 	genericErrorHandler(t, reqErr)
@@ -117,7 +120,8 @@ func TestEditHandler(t *testing.T) {
 func TestSaveHandler(t *testing.T) {
 	req := httptest.NewRequest("GET", "http://localhost/save/saveme", strings.NewReader("save me!"))
 	w := httptest.NewRecorder()
-	saveHandler(w, req, "/save/saveme")
+	saveHandle := makeHandler(saveHandler)
+	saveHandle(w, req)
 	resp := w.Result()
 	if resp.StatusCode != http.StatusFound {
 		t.Errorf("received status code %v when I expected a %v", resp.StatusCode, http.StatusFound)
