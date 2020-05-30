@@ -1,11 +1,13 @@
 package main
 
 import (
+	"fmt"
 	"html/template"
 	"io"
 	"io/ioutil"
 	"log"
 	"net/http"
+	. "os"
 	"regexp"
 )
 
@@ -17,9 +19,24 @@ type Page struct {
 
 var (
 	// html template caching will immediately halt execution if files not found
-	templates = template.Must(template.ParseFiles("edit.html", "view.html"))
+	templates = template.Must(template.ParseFiles(getListOfFileNamesFromPath("tmpl")...))
 	validPath = regexp.MustCompile("^/(edit|save|view)/([A-Za-z0-9]+)$")
 )
+
+func getListOfFileNamesFromPath(pathName string) (fileList []string) {
+	f, err := Open(pathName)
+	if err != nil {
+		log.Fatal(err)
+	}
+	files, err := f.Readdir(-1)
+	if err != nil {
+		log.Fatal(err)
+	}
+	for _, file := range files {
+		fileList = append(fileList, fmt.Sprintf("%v/%v", pathName, file.Name()))
+	}
+	return fileList
+}
 
 func (p *Page) save() error {
 	filename := p.Title + ".txt"
@@ -78,7 +95,7 @@ func saveHandler(w http.ResponseWriter, r *http.Request, title string) {
 	http.Redirect(w, r, "/view/"+title, http.StatusFound)
 }
 
-func makeHandler(fn func (http.ResponseWriter, *http.Request, string)) http.HandlerFunc {
+func makeHandler(fn func(http.ResponseWriter, *http.Request, string)) http.HandlerFunc {
 	return func(writer http.ResponseWriter, request *http.Request) {
 		match := validPath.FindStringSubmatch(request.URL.Path)
 		if match == nil {
