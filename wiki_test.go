@@ -56,7 +56,8 @@ func TestViewHandler(t *testing.T) {
 	req, err := http.NewRequest("GET", "http://localhost/view/wiki", nil)
 	genericErrorHandler(t, err)
 	w := httptest.NewRecorder()
-	viewHandler(w, req)
+	viewHandle := makeHandler(viewHandler)
+	viewHandle(w, req)
 	resp := w.Result()
 	body, err2 := ioutil.ReadAll(resp.Body)
 	genericErrorHandler(t, err2)
@@ -74,7 +75,8 @@ func TestViewHandler(t *testing.T) {
 func TestViewHandlerRedirect(t *testing.T) {
 	req := httptest.NewRequest("GET", "http://localhost/view/unknown", nil)
 	w := httptest.NewRecorder()
-	viewHandler(w, req)
+	viewHandle := makeHandler(viewHandler)
+	viewHandle(w, req)
 	resp := w.Result()
 	if resp.StatusCode != http.StatusFound {
 		t.Errorf("received status code %v when I expected a %v", resp.StatusCode, http.StatusFound)
@@ -100,7 +102,8 @@ func TestEditHandler(t *testing.T) {
 	req, err := http.NewRequest("GET", "http://localhost/edit/newpage", nil)
 	genericErrorHandler(t, err)
 	w := httptest.NewRecorder()
-	editHandler(w, req)
+	editHandle := makeHandler(editHandler)
+	editHandle(w, req)
 	resp := w.Result()
 	body, reqErr := ioutil.ReadAll(resp.Body)
 	genericErrorHandler(t, reqErr)
@@ -117,7 +120,8 @@ func TestEditHandler(t *testing.T) {
 func TestSaveHandler(t *testing.T) {
 	req := httptest.NewRequest("GET", "http://localhost/save/saveme", strings.NewReader("save me!"))
 	w := httptest.NewRecorder()
-	saveHandler(w, req)
+	saveHandle := makeHandler(saveHandler)
+	saveHandle(w, req)
 	resp := w.Result()
 	if resp.StatusCode != http.StatusFound {
 		t.Errorf("received status code %v when I expected a %v", resp.StatusCode, http.StatusFound)
@@ -135,21 +139,24 @@ func TestPathTraversalInURLFails(t *testing.T) {
 	)
 	req := httptest.NewRequest("GET", editPath, nil)
 	w := httptest.NewRecorder()
-	editHandler(w, req)
+	eh := makeHandler(editHandler)
+	eh(w, req)
 	resp := w.Result()
 	if resp.StatusCode != http.StatusNotFound {
 		t.Errorf("did not get a 404 response, got %v instead", resp.StatusCode)
 	}
 	saveReq := httptest.NewRequest("GET", savePath, nil)
 	saveW := httptest.NewRecorder()
-	saveHandler(saveW, saveReq)
+	handler := makeHandler(saveHandler)
+	handler(saveW, saveReq)
 	saveResp := saveW.Result()
 	if saveResp.StatusCode != http.StatusNotFound {
 		t.Errorf("did not get a 404 response, got %v instead", saveResp.StatusCode)
 	}
 	viewReq := httptest.NewRequest("GET", viewPath, nil)
 	viewW := httptest.NewRecorder()
-	viewHandler(viewW, viewReq)
+	viewHandle := makeHandler(viewHandler)
+	viewHandle(viewW, viewReq)
 	viewResp := viewW.Result()
 	if viewResp.StatusCode != http.StatusNotFound {
 		t.Errorf("did not get a 404 response, got %v instead", viewResp.StatusCode)
