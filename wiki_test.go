@@ -27,7 +27,7 @@ func TestWikiSave(t *testing.T) {
 	}
 	err := page.save()
 	genericErrorHandler(t, err)
-	content, err2 := ioutil.ReadFile(page.Title + ".txt")
+	content, err2 := ioutil.ReadFile("data/" + page.Title + ".txt")
 	genericErrorHandler(t, err2)
 	stringContent := string(content)
 	pageContent := string(page.Body)
