@@ -3,7 +3,6 @@ package main
 import (
 	"fmt"
 	"html/template"
-	"io"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -60,7 +59,7 @@ func renderTemplate(w http.ResponseWriter, tpl string, p *Page) {
 }
 
 func rootHandler(w http.ResponseWriter, r *http.Request) {
-	_, _ = io.WriteString(w, "Nothing to see here!")
+	http.Redirect(w, r, "view/FrontPage", http.StatusFound)
 }
 
 func viewHandler(w http.ResponseWriter, r *http.Request, title string) {
