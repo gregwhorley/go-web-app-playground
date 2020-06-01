@@ -1,0 +1,6 @@
+runtime: go113  # or go113 for Go 1.13 runtime (beta)
+instance_class: F1
+env_variables:
+handlers:
+- url: /.*
+  script: auto
