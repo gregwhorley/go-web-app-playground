@@ -106,9 +106,15 @@ func makeHandler(fn func(http.ResponseWriter, *http.Request, string)) http.Handl
 }
 
 func main() {
+	certRequest := GenerateCertRequest()
+	caCert, privKey := GenerateCertAuthority(certRequest)
+	webCert, webKey := GenerateCert(certRequest, caCert, privKey)
+	combinedCert := append(webCert, caCert...)
+	_ = ioutil.WriteFile("cert.pem", combinedCert, 0600)
+	_ = ioutil.WriteFile("key.pem", webKey, 0600)
 	http.HandleFunc("/view/", makeHandler(viewHandler))
 	http.HandleFunc("/", rootHandler)
 	http.HandleFunc("/edit/", makeHandler(editHandler))
 	http.HandleFunc("/save/", makeHandler(saveHandler))
-	log.Fatal(http.ListenAndServe(":8080", nil))
+	log.Fatal(http.ListenAndServeTLS(":8443", "cert.pem", "key.pem", nil))
 }
