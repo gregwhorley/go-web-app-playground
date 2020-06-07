@@ -1,4 +1,5 @@
 **/*.txt
+*.pem
 .idea/
 # Binaries for programs and plugins
 *.exe
